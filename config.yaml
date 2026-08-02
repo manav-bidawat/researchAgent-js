@@ -1,0 +1,331 @@
+# Configuration for the agentic research system.
+#
+# Every tunable lives here. No magic numbers in modules.
+# Values marked TUNED are set empirically in M8 against the eval set —
+# the numbers below are starting points, not final.
+
+llm:
+  provider: openrouter
+  base_url: https://openrouter.ai/api/v1
+  # Model per role. Cheap/fast where volume is high, stronger where reasoning matters.
+  #
+  # TESTING TIER — zero-cost, in use now. All three verified on OpenRouter as
+  # tools=true and image-capable. Swap to the production tier below once behaviour
+  # is settled; nothing else in the codebase changes.
+  # agent_model must accept IMAGES as well as tools: inspect_figure attaches the figure
+  # to the agent's own conversation on a follow-up user turn (ARCHITECTURE section 9),
+  # so a text-only model breaks that path. It is pinned to one model, not the router,
+  # because tool-selection behaviour is what the eval measures.
+  # Roles are pinned to specific models, never to openrouter/free. That router picks a
+  # free model at random per request and its pool includes
+  # nvidia/nemotron-3.5-content-safety, a moderation classifier that answers
+  # "User Safety: safe" to every prompt. Planning catches that (the reply will not parse
+  # and it retries), but figure description has no parse step, so a bad description would
+  # be silently embedded and indexed as if it were real.
+  #
+  # Measured over 3 reps each, on the two tasks these roles actually run:
+  #   dots-studio/dots-3-note-preview   vision 3/3  8.9s | json 3/3 78.4s
+  #   nvidia/nemotron-3-nano-omni       vision 2/3  7.1s | json 3/3  9.4s
+  #   google/gemma-4-31b-it             vision 0/3  0.4s | json 0/3  0.4s  (rate limited)
+  #   google/gemma-4-26b-a4b-it         vision 0/3  0.4s | json 0/3  0.4s  (rate limited)
+  #
+  # The agent role moved off the free tier at M5. The loop makes several calls per
+  # question, so 50 requests/day is roughly six questions — unworkable for development.
+  # qwen3.7-flash is $0.03/$0.13 per Mtok with tools, vision and 1M context, which puts
+  # the whole M8 eval around $0.15. DeepSeek was considered and rejected: its cheap tier
+  # (deepseek-v4-flash, $0.084) has no vision, and this role must accept images.
+  agent_model: qwen/qwen3.7-flash                     # tools + vision, 1M ctx, ~$0.03/Mtok
+  # Vision and utility moved off the free tier at M7 for the same reason the agent did:
+  # indexing an eval corpus is ~60 figure descriptions, and the free tier allows 50
+  # requests per day in total.
+  #
+  # Moved off qwen3.7-flash at M10: it was the single largest cost in an index run.
+  # 57 figures at ~80s serial is ~51 minutes, which is why indexing dominated a run.
+  #
+  # Chosen on a full-corpus run, not a spot check: all 48 figures, describe_workers 5,
+  # description cache cold, one run per model.
+  #   model                          wall   unreadable  errors  med_words  %digit
+  #   qwen/qwen3.7-flash            51.1m*      0          0        86       96%   <- was
+  #   google/gemini-3-flash-preview  59.2s      0          0        75       96%   <- now
+  #   google/gemini-2.5-flash-lite   64.5s      0          0        58       88%
+  #   google/gemini-3.8-flash       118.2s      0          0        78       92%
+  #   (* projected from a measured 894.86s over 14 figures; the others are measured)
+  #
+  # gemini-3-flash-preview is both the fastest and the most faithful: 51.8x the old
+  # wall time while holding the numeric detail that makes a figure chunk retrievable —
+  # 96% of its descriptions contain a number, matching qwen exactly, where flash-lite
+  # drops to 88% and 58 median words. That matters because figure chunks embed
+  # caption+description, so description length is retrievable surface area.
+  # A full 48-figure index costs roughly $0.04 at $0.50/$3.00 per Mtok.
+  #
+  # It is a *preview* model and Google may withdraw or rename it. If it disappears,
+  # google/gemini-2.5-flash-lite is the stable fallback — 0 failures across every run,
+  # 6x cheaper, at the cost of shorter and less numeric descriptions.
+  #
+  # Rejected, recorded so they are not retried:
+  #   google/gemini-3.1-flash-lite, google/gemini-3.5-flash-lite -> fast (2-3s) but each
+  #     answered UNREADABLE on a figure other models described correctly. describe_figure
+  #     caches "" for UNREADABLE, so a flake is written to the cache permanently and the
+  #     figure keeps caption text only. A silent quality regression that never raises.
+  #   google/gemini-3.8-flash -> 2x the wall time of 3-flash-preview for no quality gain.
+  #     Clean over the full 48, but threw a non-reproducible UNREADABLE twice in small
+  #     samples (2 in ~20 calls; 3/3 clean on retest of the same figure).
+  vision_model: google/gemini-3-flash-preview         # 59.2s/48 figs, 96% numeric, 0 failures
+  utility_model: qwen/qwen3.7-flash                   # arxiv query planning, claim extraction
+  #
+  # Rejected for the agent role, recorded so they are not retried:
+  #   thinkingmachines/inkling-small:free, thinkingmachines/inkling:free
+  #     -> HTTP 403, "only available on agentic harnesses"; unusable from our own loop
+  #   nvidia/nemotron-3-super-120b-a12b:free, nvidia/nemotron-3.5-lightning:free
+  #     -> tool calls fine but text-only, so inspect_figure cannot work
+  #
+  # PRODUCTION TIER — uncomment to switch. Do this before M8: openrouter/free is a
+  # router that picks a free model *at random per request*, so it cannot give the
+  # reproducible runs the eval harness needs (see temperature below).
+  #
+  # Do NOT uncomment the vision line: gemini-3.8-flash was measured at 118.2s over the
+  # 48-figure corpus against 59.2s for the gemini-3-flash-preview now set above, for no
+  # quality gain. The vision role is already on its measured best; this tier is about the
+  # agent and utility roles only.
+  # agent_model: google/gemini-3.8-flash
+  # vision_model: google/gemini-3.8-flash      # <- superseded, see vision_model above
+  # utility_model: google/gemini-3.8-flash
+  timeout_s: 60
+  max_retries: 3
+  retry_base_delay_s: 1.0   # exponential backoff base; Retry-After wins when the server sends one
+  planning_timeout_s: 25    # Per-attempt timeout for short JSON-returning calls. Kept well
+                            # below timeout_s: planning_retries multiplies with the transport
+                            # retries inside the client, and the product is the real worst case.
+  planning_budget_s: 75     # Hard wall-clock ceiling across all planning attempts for one
+                            # topic. Without it, 3 planning retries x 3 transport retries x a
+                            # 60s timeout is a nine-minute stall on a queued free model.
+  planning_retries: 3       # Retries for calls that must return parseable JSON. Needed because
+                            # openrouter/free routes at random and its pool includes
+                            # nvidia/nemotron-3.5-content-safety, a moderation classifier that
+                            # answers "User Safety: safe" to every prompt. A retry re-rolls the
+                            # model. Pin a single model to make this unnecessary.
+  temperature: 0.0          # eval runs need to be reproducible; raise only to study variance
+
+collection:
+  source: arxiv             # via the `arxiv` package, which owns its own endpoint
+  max_results_default: 8
+  max_papers_per_topic: 10
+  sort_by: relevance        # -> arxiv.SortCriterion.Relevance
+  request_delay_s: 4        # -> arxiv.Client(delay_seconds=...). arXiv asks for a delay
+                            # between calls; the client enforces it, we do not sleep by hand.
+                            # Above arXiv's requested 3s rather than exactly at it — the gap is
+                            # measured from when the previous response was handled, so sitting
+                            # exactly on the limit leaves no room for clock skew. The client is
+                            # shared process-wide (collect._build_client) because the delay is
+                            # tracked per client instance, not globally.
+  max_retries: 3            # -> arxiv.Client(num_retries=...). Separate from llm.max_retries:
+                            # a flaky arXiv feed and a flaky LLM provider are different faults
+                            # and get tuned independently.
+  rate_limit_cooldown_s: 900
+                            # How long to refuse to touch arXiv after a 429, when the
+                            # response carries no Retry-After. A 429 is per-IP and applies
+                            # to every query, so the useful response is to stop asking:
+                            # the agent can vary its wording and call search_literature
+                            # again, and each attempt would otherwise extend the block.
+                            # Recorded as an absolute expiry in paths.arxiv_cooldown;
+                            # delete that file to clear it early.
+  download_timeout_s: 60    # per-PDF socket timeout. PDFs are fetched through the same
+                            # rate-limited session as searches (corpus.arxiv_fetch), not
+                            # arxiv.Result.download_pdf, which bypasses the delay entirely.
+  user_agent: "researchAgent/0.1 (+https://github.com/Sachitbansal; arXiv API client)"
+                            # Set on the shared session, so it reaches arXiv on PDF
+                            # downloads. Searches still identify as "arxiv.py/2.1.3":
+                            # the library sets that per-request in __try_parse_feed and
+                            # a per-request header beats the session's.
+  page_size: 25             # -> arxiv.Client(page_size=...). The library default is 100, which
+                            # asks arXiv for 100 records however few we intend to keep —
+                            # max_papers_per_topic is 10. Sized above that cap, not at it: the
+                            # search returns papers already held, which are filtered after the
+                            # response, so a page exactly the size of the cap can come back
+                            # entirely deduped and leave nothing new.
+
+extraction:
+  min_figure_width: 150     # px — below this is almost always a logo or rule
+  min_figure_height: 150
+  max_figures_per_paper: 5  # bounds vision-call cost at index time
+  describe_workers: 5       # figure descriptions are issued concurrently by
+                            # extraction.describe.describe_all. Sized to
+                            # max_figures_per_paper, not above it: describe_all is called
+                            # once per paper, so a paper never offers more than that many
+                            # calls and extra workers would idle. Raise both together if
+                            # the per-paper figure cap ever rises, and keep it modest —
+                            # these are OpenRouter requests and the ceiling is their rate
+                            # limit, not local CPU. 1 disables concurrency.
+  caption_search_chars: 400 # captions are truncated to this many characters
+  render_zoom: 2.0          # figure regions are rendered at this scale. Extraction is
+                            # caption-driven and renders the region, rather than pulling
+                            # embedded rasters: most arXiv figures are vector art with no
+                            # raster to pull, and a multi-panel raster figure arrives as
+                            # several images sharing one caption.
+  drop_sections:            # everything under these headings is skipped, not chunked.
+    - references            # A bibliography retrieves badly (every entry looks relevant to
+    - bibliography          # any query about the field) and inflates the index with text
+    - acknowledgements      # that answers no question. Appendices are kept: they hold real
+    - acknowledgments       # results. An 'Appendix' heading ends the skip.
+    - acknowledgment
+  heading_size_delta: 1.5   # pt above the body font size before a line counts as a section
+                            # heading. Measured, not guessed: on a sample arXiv paper the
+                            # real headings sit at body+2.0 to body+3.0, bolded contribution
+                            # lists at body+1.0, and table cells at or below body. 1.5
+                            # separates the first group from the other two. Font *name* is not
+                            # a usable signal — many arXiv PDFs embed Type1 fonts whose names
+                            # never contain "bold".
+
+chunking:
+  target_tokens: 350
+  overlap_tokens: 60
+  max_tokens: 445           # Hard ceiling = min of the two encoder budgets. Derived, not
+                            # picked. Re-derive it if either model or max_query_tokens moves:
+                            #   bi-encoder    bge-small-en-v1.5, chunk alone:
+                            #                 512 - 2 specials                  = 510
+                            #   cross-encoder ms-marco-MiniLM, shared window:
+                            #                 512 - 3 specials - max_query_tokens = 445  <- binding
+                            # No margin is subtracted below 445: max_query_tokens is a
+                            # truncation point, not an estimate, so the query cannot overrun
+                            # its half. See docs/ARCHITECTURE.md section 5 for why both
+                            # limits are recorded rather than only the binding one.
+                            # Token counts are taken with the bi-encoder's tokenizer.
+  section_aware: true
+
+compute:
+  # Device for every model that runs locally: the bi-encoder (embedding.model), the
+  # cross-encoder reranker (retrieval.reranker_model) and the NLI cross-encoder
+  # (nli.model). One key, because they are the same kind of cost and there is no reason
+  # to split them across devices.
+  #
+  # "auto" uses CUDA when torch can reach a device and falls back to CPU otherwise, so a
+  # machine without a working NVIDIA driver keeps running unchanged. Naming a device
+  # explicitly ("cuda", "cuda:0", "cpu") is a hard assertion: if it is unreachable the
+  # run fails at config resolution rather than quietly dropping to CPU, because a silent
+  # fallback turns a driver problem into a mysterious slowdown.
+  #
+  # Measured, 406 chunks / 278 tokens mean, 16-thread CPU vs RTX 3050 6GB, same texts:
+  #                            CPU      GPU    saved
+  #   embed   406 chunks     23.94s    3.64s   20.3s   (index time, once per new chunk)
+  #   rerank   40 pairs       1.35s    0.20s    1.15s  (per query)
+  #   NLI      30 pairs       1.18s    0.32s    0.86s  (per groundedness check)
+  #   CUDA context init          -     2.2s    -2.2s   (once per process)
+  # Break-even is ~45 new chunks or ~2 questions per process; below that the context
+  # init is not repaid, so a one-off `ask` is marginally slower on GPU than on CPU.
+  # Worth it for the eval harness (~58s over a 30-question split), not for indexing —
+  # indexing time is dominated by llm.vision_model, not by anything local.
+  device: auto
+
+embedding:
+  # all-MiniLM-L6-v2 was the original choice but caps at 256 tokens, which would have
+  # silently truncated every chunk at embed time — the stage that decides whether a chunk
+  # is findable at all. bge-small-en-v1.5 accepts 512 at the same 384 dimensions.
+  model: BAAI/bge-small-en-v1.5
+  dim: 384
+  max_seq_tokens: 512
+  # BGE is trained asymmetrically: the instruction goes on the query only, never on the
+  # passage. Prefixing both sides, or neither, degrades retrieval.
+  query_prefix: "Represent this sentence for searching relevant passages: "
+  passage_prefix: ""
+  batch_size: 32
+  normalize: true           # required — BGE similarity is cosine over normalised vectors
+
+retrieval:
+  k_retrieve: 40            # wide candidate pool, cheap
+  k_final: 5                # narrow, what actually reaches the context window
+  max_query_tokens: 64      # queries are truncated here; chunking.max_tokens is derived
+                            # from this, so the two move together
+  rerank_enabled: true
+  reranker_model: cross-encoder/ms-marco-MiniLM-L-6-v2
+  relevance_threshold: -3.0 # TUNED in M8 on the 10 non-held-out questions, never on the
+                            # held-out third. Cross-encoder scores are uncalibrated logits
+                            # roughly spanning -11..+11, so this can only come from data.
+                            # Swept -8..+2; the two halves trade off exactly as expected:
+                            #   -8.0  answers everything (1.00) but abstains only 0.50
+                            #   -3.0  answerable 0.875, absent 1.000  <- balanced 0.933
+                            #    0.0  answerable 0.500, absent 1.000  (the old placeholder,
+                            #         refusing half the answerable questions)
+                            #   +2.0  answerable 0.125 — gates off almost everything
+                            # Scored by harmonic mean so a threshold cannot win one half by
+                            # abandoning the other. See eval/results/threshold_sweep.json.
+  bi_encoder_relevance_threshold: 0.55  # TUNED on the same 10 tuning questions, rerank
+                            # disabled. Gates on raw cosine, used whenever the cross-encoder
+                            # did not run: rerank_enabled false, or a reranker that failed at
+                            # runtime and fell back to bi-encoder scores. It cannot share
+                            # relevance_threshold — that number is a cross-encoder logit, and
+                            # every cosine clears it, which silently disables abstention and
+                            # answers absent-topic questions from whatever ranked first.
+                            # Swept 0.0..0.80; best achievable balance is 0.667, well short of
+                            # the cross-encoder's 0.933, because cosine ranges overlap: an
+                            # absent topic scores 0.57 while genuine answerable questions sit
+                            # at 0.55-0.65. This is a degraded fallback, not an alternative to
+                            # reranking. See eval/results/bi_threshold_sweep.json.
+  neighbour_expansion: 1    # attach position ±1 from the same paper
+  max_chunk_chars: 2000     # truncation before the chunk enters context
+
+nli:
+  model: cross-encoder/nli-deberta-v3-small
+  contradiction_threshold: 0.6   # TUNED
+  entailment_threshold: 0.5      # TUNED
+  max_pairs: 30                  # cap pairwise chunk comparisons in contradiction mode
+  max_sentences_per_chunk: 8     # NLI degrades badly on paragraph-length input, so chunks
+                                 # are split and scored sentence by sentence. This caps the
+                                 # combinatorics: pairs grow as sentences_a x sentences_b.
+  max_claims: 20                 # atomic claims extracted from one drafted answer
+  premises_per_claim: 3          # NLI runs only on the sentences most similar to the claim,
+                                 # found with the bi-encoder. Scoring every sentence and
+                                 # taking the strongest verdict does not work: MNLI models
+                                 # emit high-confidence CONTRADICTION for topically
+                                 # unrelated pairs, so over ~30 premises the winner is a
+                                 # spurious one. Measured: "Story emphasizes open-ended
+                                 # generation." scored 0.999 contradiction against a true
+                                 # claim about expert routing.
+  min_pair_similarity: 0.75      # Sentence pairs below this cosine are not compared at all:
+                                 # unrelated sentences cannot meaningfully disagree, and this
+                                 # model scores them as confident contradictions. Measured,
+                                 # not guessed — real conflicts ("routes to two experts" vs
+                                 # "routes to a single expert") sit at 0.85-0.89, while
+                                 # unrelated pairs from the same paper sit at 0.57-0.59.
+
+analysis:
+  cluster_k_range: [2, 8]   # silhouette score picks k within this range
+  tfidf_top_terms: 8        # terms used to label each cluster
+
+# Optional graph projection. FAISS remains the retrieval index; Neo4j stores the
+# paper/chunk/topic/figure relationships used by graph exploration and GraphRAG-style
+# traversal. Environment variables override these values, and the password should be
+# supplied only through NEO4J_PASSWORD (never committed here).
+graph:
+  uri: bolt://localhost:7687
+  username: neo4j
+  database: neo4j
+
+agent:
+  max_iterations: 8
+  loop_detection: true      # break on repeated (tool_name, args)
+  dedup_chunks_across_calls: true
+  max_context_tokens: 60000 # Past this, the oldest tool results have their CONTENT
+                            # replaced by a placeholder. The messages themselves stay:
+                            # deleting a tool message orphans its assistant tool_call and
+                            # the API rejects the whole request.
+  elision_placeholder_chars: 200
+  final_answer_nudge: true  # on hitting max_iterations, make one more call with
+                            # tool_choice=none so the model must answer with what it has
+  trace_text_chars: 200     # per-chunk text kept in a trace record. Full chunk text in
+                            # every record makes the log unusable (DATA_SCHEMA section 7)
+  progress_text_chars: 60   # width of the args/result phrase on a live progress line.
+                            # Separate from trace_text_chars: a trace is read later and
+                            # can be wide, a progress line has to fit a terminal.
+
+paths:
+  data_dir: data
+  papers_dir: data/papers
+  index_dir: data/index
+  cache_dir: data/cache
+  logs_dir: logs
+  prompts_dir: src/prompts
+
+eval:
+  questions_file: eval/questions.json
+  results_dir: eval/results
+  recall_at_k: [1, 3, 5]

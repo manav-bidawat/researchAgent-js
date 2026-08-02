@@ -1,0 +1,33 @@
+# secrets
+.env
+
+# data — regenerable, and PDFs should not live in git
+data/papers/
+data/cache/
+# data/index/ IS tracked, deliberately. eval/results/*.json report numbers measured
+# against this exact corpus, and build_corpus.ts searches arXiv by query rather than by
+# pinned ids — so rebuilding fetches whatever arXiv returns today and every gold_chunk_id
+# in eval/questions.json stops resolving. 3.9MB is a small price for an eval a reader can
+# actually run. The PDFs it was derived from stay out.
+logs/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# model caches
+.cache/
+# test / eval artefacts
+.pytest_cache/
+# eval/results/ is deliberately NOT ignored: docs/EVALUATION.md cites those numbers as
+# evidence, and they are not reproducible (live arXiv, a hosted model), so regenerating
+# them is not the same as recovering them. Only the sweep's scratch config is ignored.
+eval/results/_sweep_config.yaml
+
+# cold-start demo corpus — regenerable, same reasons as data/
+data_demo/
+node_modules/
+dist/

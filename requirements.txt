@@ -1,0 +1,34 @@
+# Pinned. sentence-transformers and faiss have real version-conflict history —
+# do not float these.
+
+# collection
+arxiv==2.1.3
+requests==2.32.3
+
+# pdf extraction
+PyMuPDF==1.24.10
+
+# embeddings, reranking, NLI
+sentence-transformers==3.0.1
+torch==2.4.1
+
+# vector index
+faiss-cpu==1.8.0.post1
+
+# ml / analysis
+scikit-learn==1.5.2
+numpy==1.26.4
+pandas==2.2.3
+
+# config, env
+PyYAML==6.0.2
+python-dotenv==1.0.1
+
+# graph projection
+# The Neo4j driver is loaded only for graph operations. The MCP server is TypeScript
+# (app/mcp/server.ts) and needs no Python package.
+neo4j>=5.0,<7.0
+
+# testing
+pytest==8.3.3
+neo4j>=5.14.1
