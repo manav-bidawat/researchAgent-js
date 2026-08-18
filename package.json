@@ -1,0 +1,43 @@
+{
+  "name": "research-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agentic research assistant over scientific papers: TypeScript CLI, Express and MCP servers over the Python retrieval engine.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "sciagent": "dist/app/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "cli": "tsx app/cli.ts",
+    "serve": "tsx app/cli.ts serve",
+    "mcp": "tsx app/cli.ts mcp",
+    "start": "node dist/app/cli.js serve --host 0.0.0.0",
+    "test": "vitest run",
+    "test:py": "python3 -m pytest tests/ -v",
+    "eval:ablation": "tsx eval/ablation.ts",
+    "eval:tune-threshold": "tsx eval/tune_threshold.ts",
+    "eval:tune-bi-threshold": "tsx eval/tune_bi_threshold.ts",
+    "eval:annotate": "tsx eval/annotate.ts",
+    "eval:build-corpus": "tsx eval/build_corpus.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "commander": "^15.0.0",
+    "express": "^5.2.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.3",
+    "@types/supertest": "^7.2.1",
+    "supertest": "^7.3.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}
