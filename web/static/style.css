@@ -1,0 +1,403 @@
+/* sciagent demo skin.
+   A reading column with a margin rail: the answer is set like a page of a paper, the
+   agent's steps sit beside it the way annotations sit in a margin. */
+
+:root {
+  --paper:  #FAFAF7;
+  --field:  #FFFFFF;
+  --ink:    #15171C;
+  --soft:   #646B7A;
+  --rule:   #E4E4DE;
+  --accent: #9B1C1C;          /* keyed to arXiv's Cornell red — the corpus is arXiv */
+  --accent-wash: #F4E7E7;
+  --shadow: 0 10px 30px rgba(21, 23, 28, .10);
+
+  --t-retrieve:  #2F6F9F;
+  --t-search:    #9B1C1C;
+  --t-analyze:   #A8751E;
+  --t-figure:    #6B4E9B;
+  --t-check:     #3F7A52;
+
+  --serif: "Source Serif 4", "Iowan Old Style", Palatino, Georgia, serif;
+  --mono:  "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, monospace;
+
+  --col: 34rem;
+  --page: 74rem;
+  --gutter: clamp(1rem, 5vw, 4.5rem);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:  #14161D;
+    --field:  #1B1E27;
+    --ink:    #ECECE6;
+    --soft:   #949BAB;
+    --rule:   #272B36;
+    --accent: #E4756F;
+    --accent-wash: #2C2024;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+    --t-retrieve: #6FA8D0;
+    --t-search:   #E4756F;
+    --t-analyze:  #D6A94F;
+    --t-figure:   #A489D6;
+    --t-check:    #6FB283;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.62;
+  font-variant-numeric: oldstyle-nums;
+}
+
+::selection { background: var(--accent-wash); }
+
+/* ---------------------------------------------------------------- header */
+
+.bar {
+  border-bottom: 1px solid var(--rule);
+  padding: 0 var(--gutter);
+}
+
+.bar-inner {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 1.5rem 0 1.1rem;
+}
+
+.mark {
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: -.015em;
+}
+
+.views { display: flex; gap: .3rem; }
+
+.view-tab {
+  appearance: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--soft);
+  padding: .15rem .55rem .3rem;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+.view-tab:hover { color: var(--ink); }
+.view-tab.is-on { color: var(--ink); border-bottom-color: var(--accent); }
+
+/* ---------------------------------------------------------------- layout */
+
+main {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: clamp(1.75rem, 5vw, 3.25rem) var(--gutter) 5rem;
+}
+
+.view.is-hidden { display: none; }
+
+.run {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 21rem);
+  gap: clamp(1.5rem, 5vw, 4rem);
+  align-items: start;
+  margin-top: 2.5rem;
+}
+
+@media (max-width: 62rem) {
+  .run { grid-template-columns: minmax(0, 1fr); }
+  #rail { order: -1; }          /* while it runs, the steps are the thing worth seeing */
+}
+
+/* ---------------------------------------------------------------- ask */
+
+#ask-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  border-bottom: 2.5px solid var(--ink);
+  padding-bottom: .5rem;
+}
+
+#q {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font-family: var(--serif);
+  font-size: clamp(1.25rem, 3.2vw, 1.7rem);
+  line-height: 1.3;
+  color: var(--ink);
+  padding: .2rem 0;
+}
+#q::placeholder { color: var(--soft); opacity: .75; }
+#q:focus { outline: none; }
+#ask-form:focus-within { border-bottom-color: var(--accent); }
+
+#go {
+  flex: none;
+  appearance: none;
+  border: 0;
+  border-radius: 2px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: .45rem 1.3rem;
+  cursor: pointer;
+}
+#go:hover { background: var(--accent); }
+#go[disabled] { opacity: .4; cursor: progress; }
+
+.note {
+  max-width: 46rem;
+  margin: .9rem 0 0;
+  color: var(--soft);
+  font-size: .95rem;
+}
+.note a { color: inherit; text-decoration-color: var(--rule); }
+.note a:hover { color: var(--ink); }
+
+.blank { color: var(--soft); font-size: .95rem; margin: 0; }
+
+/* ---------------------------------------------------------------- answer */
+
+.prose { max-width: var(--col); }
+.prose > *:first-child { margin-top: 0; }
+.prose p { margin: 0 0 1.15em; }
+.prose h2, .prose h3 {
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 1.9em 0 .55em;
+  letter-spacing: -.01em;
+}
+.prose h3 { font-size: 1rem; font-weight: 600; }
+.prose ul, .prose ol { margin: 0 0 1.15em; padding-left: 1.3em; }
+.prose li { margin-bottom: .35em; }
+.prose li::marker { color: var(--soft); }
+.prose blockquote {
+  margin: 0 0 1.15em;
+  padding-left: 1rem;
+  border-left: 2px solid var(--rule);
+  color: var(--soft);
+}
+.prose code {
+  font-family: var(--mono);
+  font-size: .84em;
+  background: var(--accent-wash);
+  padding: .1em .32em;
+  border-radius: 2px;
+}
+.prose pre {
+  font-family: var(--mono);
+  font-size: .8rem;
+  line-height: 1.5;
+  background: var(--field);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: .9rem 1rem;
+  overflow-x: auto;
+  margin: 0 0 1.15em;
+}
+.prose pre code { background: none; padding: 0; font-size: inherit; }
+.prose hr { border: 0; border-top: 1px solid var(--rule); margin: 2em 0; }
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: .92rem;
+  margin: 0 0 1.15em;
+}
+.prose th, .prose td {
+  text-align: left;
+  padding: .45rem .7rem .45rem 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+.prose th { font-weight: 600; }
+
+/* a citation is a control, not decoration: it opens the paper it points at */
+.cite {
+  appearance: none;
+  border: 0;
+  background: var(--accent-wash);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: .68em;
+  line-height: 1.5;
+  padding: .12em .4em;
+  border-radius: 2px;
+  cursor: pointer;
+  vertical-align: .32em;
+  margin: 0 0 0 .12em;
+}
+.cite:hover, .cite:focus-visible { background: var(--accent); color: var(--paper); }
+
+/* what the numbers stand for */
+.refs {
+  margin: 2.2rem 0 0;
+  padding-left: 1.5rem;
+  font-size: .88rem;
+  line-height: 1.5;
+  border-top: 1px solid var(--rule);
+  padding-top: 1.1rem;
+}
+.refs li { margin-bottom: .5rem; padding-left: .2rem; }
+.refs li::marker { color: var(--accent); font-family: var(--mono); font-size: .8em; }
+.ref-title { font-weight: 600; }
+.ref-who { color: var(--soft); }
+.refs a { color: var(--accent); font-size: .85em; }
+
+.verdict {
+  margin-top: 2rem;
+  padding-top: .9rem;
+  border-top: 1px solid var(--rule);
+  color: var(--soft);
+  font-size: .88rem;
+}
+
+.failure {
+  border-left: 2px solid var(--accent);
+  padding-left: 1rem;
+  color: var(--accent);
+  font-size: .95rem;
+}
+
+/* ---------------------------------------------------------------- rail */
+
+#rail { font-size: .9rem; }
+
+.step {
+  display: grid;
+  grid-template-columns: .7rem 1fr;
+  gap: .6rem;
+  padding: .55rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.step:last-child { border-bottom: 0; }
+
+.dot {
+  width: .44rem;
+  height: .44rem;
+  border-radius: 50%;
+  background: var(--soft);
+  margin-top: .55rem;
+}
+.step[data-tool="retrieve_evidence"] .dot { background: var(--t-retrieve); }
+.step[data-tool="search_literature"] .dot { background: var(--t-search); }
+.step[data-tool="analyze_corpus"] .dot { background: var(--t-analyze); }
+.step[data-tool="inspect_figure"] .dot { background: var(--t-figure); }
+.step[data-tool="check_evidence_consistency"] .dot { background: var(--t-check); }
+
+.step-name { font-weight: 600; }
+.step-arg {
+  font-family: var(--mono);
+  font-size: .76rem;
+  line-height: 1.5;
+  color: var(--soft);
+  word-break: break-word;
+  display: block;
+  margin-top: .1rem;
+}
+.step-out { color: var(--soft); font-size: .84rem; display: block; margin-top: .15rem; }
+.step-out:empty { display: none; }
+.step.is-live .step-name::after {
+  content: "";
+  display: inline-block;
+  width: .4em; height: .4em;
+  margin-left: .4em;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.1s ease-in-out infinite;
+}
+.step.is-thinking .step-name { font-weight: 400; color: var(--soft); font-style: italic; }
+
+@keyframes pulse { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .step.is-live .step-name::after { animation: none; opacity: .6; }
+}
+
+/* ---------------------------------------------------------------- corpus */
+
+.corpus-head {
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  margin: 0;
+}
+
+#corpus-scope { margin-bottom: 2.75rem; }
+
+.topic { margin-bottom: 3rem; max-width: 52rem; }
+
+.topic-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 .15rem;
+}
+.topic-query {
+  font-family: var(--mono);
+  font-size: .72rem;
+  line-height: 1.6;
+  color: var(--soft);
+  margin: 0 0 1.1rem;
+  word-break: break-word;
+}
+
+.paper {
+  padding: .85rem 0;
+  border-top: 1px solid var(--rule);
+}
+.paper-title { font-weight: 600; line-height: 1.35; }
+.paper-who { color: var(--soft); font-size: .9rem; }
+.paper-file {
+  font-family: var(--mono);
+  font-size: .73rem;
+  color: var(--soft);
+  margin-top: .2rem;
+  display: block;
+}
+.paper-file a { color: inherit; }
+.paper-flag { color: var(--accent); }
+
+/* ---------------------------------------------------------------- citation card */
+
+.card {
+  position: fixed;
+  z-index: 20;
+  max-width: 23rem;
+  background: var(--field);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  box-shadow: var(--shadow);
+  padding: .9rem 1rem;
+  font-size: .88rem;
+  line-height: 1.5;
+}
+.card.is-hidden { display: none; }
+.card .card-title { font-weight: 600; }
+.card .card-who { color: var(--soft); font-size: .84rem; }
+.card .card-id {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--soft);
+  display: block;
+  margin-top: .35rem;
+}
+.card a { color: var(--accent); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }

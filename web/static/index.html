@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sciagent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>◧</text></svg>">
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-inner">
+    <span class="mark">sciagent</span>
+    <nav class="views">
+      <button class="view-tab is-on" data-view="ask">Ask</button>
+      <button class="view-tab" data-view="corpus">Corpus</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ask -->
+  <section id="view-ask" class="view">
+    <form id="ask-form" autocomplete="off">
+      <input id="q" type="text" spellcheck="false"
+             placeholder="How do sparse mixture-of-experts models handle expert load balancing?">
+      <button id="go" type="submit">Ask</button>
+    </form>
+    <p class="note" id="scope">Every claim is cited, and each citation opens the paper behind it. If the corpus does not cover your question, the agent searches arXiv and reads more.</p>
+
+    <div class="run">
+      <article id="answer" class="prose">
+        <p class="blank">Ask something and the answer appears here, with its sources marked.</p>
+      </article>
+
+      <aside id="rail" aria-live="polite">
+        <p class="blank">Each step the agent takes shows up here while it works.</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- corpus -->
+  <section id="view-corpus" class="view is-hidden">
+    <h1 class="corpus-head">What the agent has read</h1>
+    <p class="note" id="corpus-scope">Loading the corpus.</p>
+    <div id="corpus"></div>
+  </section>
+</main>
+
+<div id="card" class="card is-hidden" role="dialog" aria-label="Cited paper"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
