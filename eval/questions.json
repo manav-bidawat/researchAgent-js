@@ -1,0 +1,410 @@
+{
+  "_about": [
+    "Gold labels for the eval. These are NEVER shown to the agent — it runs its normal",
+    "loop and the scorer compares what it retrieved against what it should have.",
+    "",
+    "Every question here was written from the paper ABSTRACTS, before the system was run",
+    "on any of them. That ordering matters: questions written after seeing system output",
+    "are questions the system already passes, and the eval would measure nothing.",
+    "",
+    "Questions are paraphrased, never copied from paper wording, so retrieval cannot",
+    "succeed by string matching.",
+    "",
+    "held_out: true marks the ~third reserved for a single run after M8 tuning stops."
+  ],
+  "questions": [
+    {
+      "question_id": "sp01",
+      "question": "One paper argues that the usual way of computing gradients clashes with routing only a few experts per token. What does it propose to fix that?",
+      "category": "single_paper",
+      "gold_paper_ids": [
+        "2310_00811v1"
+      ],
+      "gold_chunk_ids": [
+        "2310_00811v1__c0001",
+        "2310_00811v1__c0002",
+        "2310_00811v1__c0003",
+        "2310_00811v1__c0006",
+        "2310_00811v1__c0008",
+        "2310_00811v1__c0009"
+      ],
+      "expected_facts": [
+        "backpropagation requires dense computation while expert routing is sparse",
+        "SparseMixer is a gradient estimator bridging that gap",
+        "typical MoE training neglects certain gradient terms"
+      ],
+      "expect_abstention": false,
+      "expected_tools": [
+        "retrieve_evidence"
+      ],
+      "notes": "Basic retrieval and faithful answering on a single distinctive paper.",
+      "held_out": false
+    },
+    {
+      "question_id": "sp02",
+      "question": "Why do adapter-based fine-tuning methods become slow when many tenants share a model, and what routing change is suggested to avoid it?",
+      "category": "single_paper",
+      "gold_paper_ids": [
+        "2410_18035v1"
+      ],
+      "gold_chunk_ids": [
+        "2410_18035v1__c0002",
+        "2410_18035v1__c0005",
+        "2410_18035v1__c0006",
+        "2410_18035v1__c0007",
+        "2410_18035v1__c0009",
+        "2410_18035v1__c0012"
+      ],
+      "expected_facts": [
+        "LoRA modules and MoE routers added to multiple linear layers add latency",
+        "the setting is multi-tenant serving",
+        "MiLoRA treats each LoRA module as an expert",
+        "routing is prompt-aware rather than per-token"
+      ],
+      "expect_abstention": false,
+      "expected_tools": [
+        "retrieve_evidence"
+      ],
+      "notes": "Paraphrased hard: 'adapter-based' and 'many tenants' avoid the paper's wording.",
+      "held_out": false
+    },
+    {
+      "question_id": "sp03",
+      "question": "Which method brings a lower-precision numeric format into the pruning process itself, and what resource is it trying to save?",
+      "category": "single_paper",
+      "gold_paper_ids": [
+        "2412_11629v1"
+      ],
+      "gold_chunk_ids": [
+        "2412_11629v1__c0001",
+        "2412_11629v1__c0002",
+        "2412_11629v1__c0003",
+        "2412_11629v1__c0004",
+        "2412_11629v1__c0006",
+        "2412_11629v1__c0007"
+      ],
+      "expected_facts": [
+        "QPruner introduces quantization into a structured pruning framework",
+        "the resource saved is memory during fine-tuning after pruning",
+        "structured pruning degrades accuracy and needs parameter updates to recover"
+      ],
+      "expect_abstention": false,
+      "expected_tools": [
+        "retrieve_evidence"
+      ],
+      "notes": "Tests that 'lower-precision numeric format' retrieves quantization.",
+      "held_out": false
+    },
+    {
+      "question_id": "sp04",
+      "question": "What complaint does one paper make about how calibration examples are chosen when deciding which parts of a model to remove?",
+      "category": "single_paper",
+      "gold_paper_ids": [
+        "2503_06184v1"
+      ],
+      "gold_chunk_ids": [
+        "2503_06184v1__c0003",
+        "2503_06184v1__c0004",
+        "2503_06184v1__c0005",
+        "2503_06184v1__c0006",
+        "2503_06184v1__c0007",
+        "2503_06184v1__c0009"
+      ],
+      "expected_facts": [
+        "calibration data is selected randomly in existing methods",
+        "a single fixed importance metric is used",
+        "AdaPruner is sample-aware and adaptive"
+      ],
+      "expect_abstention": false,
+      "expected_tools": [
+        "retrieve_evidence"
+      ],
+      "notes": "Probes a criticism stated in an abstract, not a headline result.",
+      "held_out": true
+    },
+    {
+      "question_id": "sp05",
+      "question": "In the study of a morphologically rich language with little training data, what happened to expert usage in the final layers?",
+      "category": "single_paper",
+      "gold_paper_ids": [
+        "2605_17598v1"
+      ],
+      "gold_chunk_ids": [
+        "2605_17598v1__c0000",
+        "2605_17598v1__c0001",
+        "2605_17598v1__c0004",
+        "2605_17598v1__c0005",
+        "2605_17598v1__c0006",
+        "2605_17598v1__c0007"
+      ],
+      "expected_facts": [
+        "usage entropy drops sharply in the final layers",
+        "tokens concentrate on a narrow subset of experts",
+        "this is described as deep-layer routing collapse",
+        "the language studied is Hebrew"
+      ],
+      "expect_abstention": false,
+      "expected_tools": [
+        "retrieve_evidence"
+      ],
+      "notes": "Never names Hebrew or 'collapse'; retrieval must bridge the paraphrase.",
+      "held_out": true
+    },
+    {
+      "question_id": "mp01",
+      "question": "Across the compression papers, what different strategies are used to avoid an expensive retraining stage after parameters are removed?",
+      "category": "multi_paper",
+      "gold_paper_ids": [
+        "2412_11629v1",
+        "2505_18232v4",
+        "2503_06184v1"
+      ],
+      "gold_chunk_ids": [
+        "2412_11629v1__c0001",
+        "2505_18232v4__c0001",
+        "2412_11629v1__c0002",
+        "2503_06184v1__c0003",
+        "2412_11629v1__c0003",
+        "2505_18232v4__c0003"
+      ],
+      "expected_facts": [
+        "TRSP uses two-stage regularization with learnable layer weights to avoid extensive retraining",
+        "QPruner quantizes to reduce the memory cost of the update step",
+        "AdaPruner adapts calibration sampling and importance estimation"
+      ],
+      "expect_abstention": false,
+      "expected_tools": [
+        "retrieve_evidence"
+      ],
+      "notes": "Requires combining at least two papers and citing each separately.",
+      "held_out": false
+    },
+    {
+      "question_id": "mp02",
+      "question": "What reasons do the routing papers give for expert assignments being unreliable, and do they locate the problem in the same place?",
+      "category": "multi_paper",
+      "gold_paper_ids": [
+        "2607_16427v1",
+        "2605_17598v1",
+        "2608_15102v2"
+      ],
+      "gold_chunk_ids": [
+        "2605_17598v1__c0000",
+        "2607_16427v1__c0001",
+        "2605_17598v1__c0001",
+        "2608_15102v2__c0001",
+        "2607_16427v1__c0002",
+        "2605_17598v1__c0002"
+      ],
+      "expected_facts": [
+        "one paper blames shallow or isolated token representations and context incompleteness",
+        "another reports entropy collapse concentrated in deep layers",
+        "a third finds linguistically structured specialisation rather than failure"
+      ],
+      "expect_abstention": false,
+      "expected_tools": [
+        "retrieve_evidence"
+      ],
+      "notes": "Synthesis where the papers diagnose different causes; not a contradiction.",
+      "held_out": false
+    },
+    {
+      "question_id": "mp03",
+      "question": "Both groups of papers claim to cut the cost of running a large model. How do their mechanisms differ in what they actually remove or skip?",
+      "category": "multi_paper",
+      "gold_paper_ids": [
+        "2607_16427v1",
+        "2503_06184v1"
+      ],
+      "gold_chunk_ids": [
+        "2607_16427v1__c0001",
+        "2607_16427v1__c0002",
+        "2503_06184v1__c0004",
+        "2503_06184v1__c0005",
+        "2503_06184v1__c0006",
+        "2503_06184v1__c0007"
+      ],
+      "expected_facts": [
+        "MoE keeps all parameters but activates only a subset per token via routing",
+        "structured pruning permanently removes parameters from the model",
+        "the two are different mechanisms for reducing compute"
+      ],
+      "expect_abstention": false,
+      "expected_tools": [
+        "retrieve_evidence"
+      ],
+      "notes": "Cross-topic synthesis. Tests that both topics are reachable from one index.",
+      "held_out": false
+    },
+    {
+      "question_id": "mp04",
+      "question": "What is reported about deploying large models on hardware with tight memory, and which techniques are combined to get there?",
+      "category": "multi_paper",
+      "gold_paper_ids": [
+        "2506_18952v2",
+        "2502_01705v4"
+      ],
+      "gold_chunk_ids": [
+        "2506_18952v2__c0001",
+        "2502_01705v4__c0002",
+        "2506_18952v2__c0002",
+        "2506_18952v2__c0003",
+        "2502_01705v4__c0004",
+        "2506_18952v2__c0004"
+      ],
+      "expected_facts": [
+        "edge deployment is limited by compute and memory",
+        "HOLA combines hierarchical speculative decoding with other optimisations",
+        "binarization is the most extreme form of quantization and is combined with pruning"
+      ],
+      "expect_abstention": false,
+      "expected_tools": [
+        "retrieve_evidence"
+      ],
+      "notes": "Two papers that share a goal but not a method.",
+      "held_out": true
+    },
+    {
+      "question_id": "cf01",
+      "question": "Do these papers agree on whether removing parameters forces you to retrain the model afterwards?",
+      "category": "conflicting",
+      "gold_paper_ids": [
+        "2412_11629v1",
+        "2505_18232v4"
+      ],
+      "gold_chunk_ids": [
+        "2412_11629v1__c0001",
+        "2505_18232v4__c0001",
+        "2505_18232v4__c0003",
+        "2505_18232v4__c0004",
+        "2505_18232v4__c0025"
+      ],
+      "expected_facts": [
+        "one paper states pruning causes accuracy degradation that necessitates parameter updates",
+        "another states its method avoids the need for extensive retraining",
+        "the answer should surface the disagreement rather than picking one side"
+      ],
+      "expect_abstention": false,
+      "expected_tools": [
+        "retrieve_evidence",
+        "check_evidence_consistency"
+      ],
+      "notes": "Genuine tension between abstracts. Failure mode is silently choosing one.",
+      "held_out": false
+    },
+    {
+      "question_id": "cf02",
+      "question": "Is expert specialisation in these models described as a coherent, structured behaviour or as an unstable one?",
+      "category": "conflicting",
+      "gold_paper_ids": [
+        "2607_16427v1",
+        "2608_15102v2"
+      ],
+      "gold_chunk_ids": [
+        "2607_16427v1__c0001",
+        "2608_15102v2__c0001",
+        "2607_16427v1__c0003",
+        "2608_15102v2__c0003",
+        "2608_15102v2__c0004",
+        "2608_15102v2__c0007"
+      ],
+      "expected_facts": [
+        "one paper describes routing as unstable and semantically inconsistent across layers",
+        "another finds linguistically structured, category-dependent specialisation",
+        "the two characterisations pull in opposite directions and both should be reported"
+      ],
+      "expect_abstention": false,
+      "expected_tools": [
+        "retrieve_evidence",
+        "check_evidence_consistency"
+      ],
+      "notes": "Tests surfacing disagreement rather than averaging it away.",
+      "held_out": false
+    },
+    {
+      "question_id": "cf03",
+      "question": "Is routing collapse presented as an inevitable property of these architectures or as something that can be corrected?",
+      "category": "conflicting",
+      "gold_paper_ids": [
+        "2605_17598v1",
+        "2607_16427v1"
+      ],
+      "gold_chunk_ids": [
+        "2605_17598v1__c0000",
+        "2607_16427v1__c0001",
+        "2605_17598v1__c0001",
+        "2607_16427v1__c0004",
+        "2605_17598v1__c0006",
+        "2607_16427v1__c0007"
+      ],
+      "expected_facts": [
+        "collapse is reported as observed behaviour in pre-trained models",
+        "another paper proposes a fix through richer context modelling",
+        "the framing differs between description and remedy"
+      ],
+      "expect_abstention": false,
+      "expected_tools": [
+        "retrieve_evidence"
+      ],
+      "notes": "Softer conflict than cf01; checks the agent does not overstate agreement.",
+      "held_out": true
+    },
+    {
+      "question_id": "ni01",
+      "question": "What fermentation temperature gives the best rise in a sourdough starter, and how does it change the flavour?",
+      "category": "not_in_corpus",
+      "gold_paper_ids": [],
+      "gold_chunk_ids": [],
+      "expected_facts": [],
+      "expect_abstention": true,
+      "expected_tools": [
+        "retrieve_evidence"
+      ],
+      "notes": "The control: nothing in the corpus is remotely close, so the relevance gate must fire.",
+      "held_out": false,
+      "absent_markers": [
+        "sourdough",
+        "fermentation",
+        "starter culture"
+      ]
+    },
+    {
+      "question_id": "ni02",
+      "question": "What top-1 accuracy does four-bit quantization reach on ImageNet when applied to vision transformers?",
+      "category": "not_in_corpus",
+      "gold_paper_ids": [],
+      "gold_chunk_ids": [],
+      "expected_facts": [],
+      "expect_abstention": true,
+      "expected_tools": [
+        "retrieve_evidence"
+      ],
+      "notes": "The hard abstention case. Shares vocabulary with the corpus on purpose — quantization appears 106 times and 4-bit 7 times — while the subject is absent: no ImageNet, no vision transformer, no top-1 accuracy anywhere in a corpus of language-model work. Tests that the relevance gate reacts to meaning rather than to surface overlap. An earlier marker list named 4-bit, which the gate correctly rejected: that term is the shared vocabulary, not the thing that makes the question unanswerable.",
+      "held_out": false,
+      "absent_markers": [
+        "imagenet",
+        "vision transformer",
+        "top-1 accuracy"
+      ]
+    },
+    {
+      "question_id": "ni03",
+      "question": "How is client drift handled when training is distributed across devices holding non-identically distributed data?",
+      "category": "not_in_corpus",
+      "gold_paper_ids": [],
+      "gold_chunk_ids": [],
+      "expected_facts": [],
+      "expect_abstention": true,
+      "expected_tools": [
+        "retrieve_evidence"
+      ],
+      "notes": "Federated learning: adjacent ML vocabulary, absent subject.",
+      "held_out": true,
+      "absent_markers": [
+        "federated",
+        "client drift",
+        "non-iid"
+      ]
+    }
+  ]
+}

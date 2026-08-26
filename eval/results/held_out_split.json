@@ -1,0 +1,223 @@
+{
+  "n_questions": 5,
+  "rows": [
+    {
+      "question_id": "sp04",
+      "category": "single_paper",
+      "expect_abstention": false,
+      "abstained": false,
+      "abstention_correct": true,
+      "recall": {
+        "1": 0.0,
+        "3": 0.3333333333333333,
+        "5": 0.3333333333333333
+      },
+      "mrr": 0.5,
+      "gold_paper_hit": true,
+      "fact_coverage": 1.0,
+      "facts_covered": "3/3",
+      "citations": {
+        "total": 4,
+        "resolved": 4,
+        "unresolved": []
+      },
+      "tools": {
+        "expected": [
+          "retrieve_evidence"
+        ],
+        "used": [
+          "retrieve_evidence"
+        ],
+        "missing": [],
+        "unexpected": [],
+        "matched": true
+      },
+      "iterations": 2,
+      "tool_calls": 1,
+      "stopped_because": "answered",
+      "elapsed_ms": 13864,
+      "answer": "One paper — *Sample-aware Adaptive Structured Pruning for Large Language Models* (AdaPruner) — complains that existing structured pruning methods **randomly select** calibration data from public datasets to decide which parameters to remove. \n\nThe authors argue this approach is suboptimal because:\n\n- Randomly selected calibration data **lacks representativeness and diversity**, leading to inaccurate gradient information and flawed pruning strategies [2503_06184v1__c0003].\n- The precision of the gradient (used in Taylor expansion-based importance estimation) is directly tied to the calibration data's quality, so subpar calibration data causes substantial performance degradation in pruned models [2503_06184v1__c0002].\n- Because different importance estimation metrics exhibit varying sensitivity to calibration data, randomly chosen samples may be incompatible with the chosen metric, further undermining pruning decisions [2503_06184v1__c0004].\n\nIn their experiments, replacing adaptive calibration data selection with random selection caused an average performance drop of 0.71% across downstream tasks [2503_06184v1__c0020].",
+      "run_id": "9d8c22ac174c"
+    },
+    {
+      "question_id": "sp05",
+      "category": "single_paper",
+      "expect_abstention": false,
+      "abstained": false,
+      "abstention_correct": true,
+      "recall": {
+        "1": 0.0,
+        "3": 0.16666666666666666,
+        "5": 0.3333333333333333
+      },
+      "mrr": 0.3333333333333333,
+      "gold_paper_hit": true,
+      "fact_coverage": 1.0,
+      "facts_covered": "4/4",
+      "citations": {
+        "total": 3,
+        "resolved": 3,
+        "unresolved": []
+      },
+      "tools": {
+        "expected": [
+          "retrieve_evidence"
+        ],
+        "used": [
+          "retrieve_evidence"
+        ],
+        "missing": [],
+        "unexpected": [],
+        "matched": true
+      },
+      "iterations": 2,
+      "tool_calls": 1,
+      "stopped_because": "answered",
+      "elapsed_ms": 13558,
+      "answer": "In the study of Hebrew—a morphologically rich, low-resource language—expert usage underwent **deep-layer routing collapse** in the final layers of Mixture-of-Experts (MoE) models. Specifically:\n\n* **Usage entropy dropped sharply** as layers deepened, meaning tokens were no longer distributed broadly across experts.\n* Tokens became **increasingly concentrated among a narrow subset of experts**, a pattern largely absent for English, which maintained broad, uniform routing throughout all layers [2605_17598v1__c0000][2605_17598v1__c0052].\n* This collapse manifested consistently across multiple metrics: reduced usage entropy, elevated Gini coefficients, and decreased cosine similarity between layers [2605_17598v1__c0052].\n\nThe authors characterize this as a previously undocumented bottleneck that constrains MoE models' capacity to process underrepresented languages [2605_17598v1__c0058]. Importantly, the same collapse signature was also observed in Japanese—a typologically unrelated language—suggesting it generalizes across low-resource languages rather than being specific to any single linguistic structure [2605_17598v1__c0000][2605_17598v1__c0052]. Fine-tuning on data with greater representation of the target language substantially mitigated this collapse, restoring higher entropy and shifting routing toward shared bilingual experts [2605_17598v1__c0052][2605_17598v1__c0058].",
+      "run_id": "fc8eaf16fd25"
+    },
+    {
+      "question_id": "mp04",
+      "category": "multi_paper",
+      "expect_abstention": false,
+      "abstained": false,
+      "abstention_correct": true,
+      "recall": {
+        "1": 0.16666666666666666,
+        "3": 0.3333333333333333,
+        "5": 0.3333333333333333
+      },
+      "mrr": 1.0,
+      "gold_paper_hit": true,
+      "fact_coverage": 1.0,
+      "facts_covered": "3/3",
+      "citations": {
+        "total": 15,
+        "resolved": 15,
+        "unresolved": []
+      },
+      "tools": {
+        "expected": [
+          "retrieve_evidence"
+        ],
+        "used": [
+          "retrieve_evidence",
+          "retrieve_evidence",
+          "retrieve_evidence",
+          "retrieve_evidence",
+          "retrieve_evidence",
+          "check_evidence_consistency"
+        ],
+        "missing": [],
+        "unexpected": [
+          "check_evidence_consistency"
+        ],
+        "matched": true
+      },
+      "iterations": 6,
+      "tool_calls": 6,
+      "stopped_because": "answered",
+      "elapsed_ms": 110359,
+      "answer": "Based on the indexed papers, deploying large language models on hardware with tight memory constraints requires combining multiple compression and optimization techniques—no single method suffices. Three frameworks in the corpus report distinct approaches to achieving this:\n\n## HOLA Framework (Hierarchical Optimized Language Augmentation)\n\nThis unified framework combines three synergistic modules targeting both internal inference and external retrieval efficiency [2506_18952v2__c0001][2506_18952v2__c0004]:\n\n1. **Lo-Bi Optimization:** Combines LoRA-based structured pruning with sensitivity-guided mixed-precision quantization, mapping subblocks of weights to 4-, 8-, or 16-bit precision to minimize reconstruction error under tight memory and bandwidth constraints [2506_18952v2__c0009]. Over 70% of blocks converge to 8-bit precision while critical paths retain 16-bit fidelity [2506_18952v2__c0024].\n\n2. **Hierarchical Speculative Decoding (HSD):** Uses entropy-aware verification to accelerate autoregressive token generation. Tokens with entropy below a threshold τ are directly accepted; others are verified by a higher-fidelity model, reducing verifier invocations from O(T) to O(k) where k≪T [2506_18952v2__c0007].\n\n3. **AdaComp-RAG:** An adaptive retrieval system that measures query complexity via gradient norms of the language modeling loss. If complexity exceeds a threshold δ, dense retrieval is invoked; otherwise, the query proceeds without augmentation, saving memory [2506_18952v2__c0007][2506_18952v2__c0029].\n\nOn edge devices, HOLA achieves approximately 1.2 GB peak memory usage with high accuracy: 87.6% on GSM8K for Jetson Nano and 85.1% for Raspberry Pi 4 [2506_18952v2__c0032]. Ablation confirms each module contributes measurably—removing Lo-Bi increases memory to 947 MB and latency, while disabling AdaComp-RAG raises memory to 823 MB and lowers accuracy [2506_18952v2__c0029].\n\n## QPruner Framework\n\nThis framework integrates structured pruning with layer-wise mixed-precision quantization and efficient fine-tuning [2412_11629v1__c0001][2412_11629v1__c0003]:\n\n1. **Structured Pruning:** Removes redundant weights using LLM-Pruner baseline, producing a smaller model [2412_11629v1__c0023].\n\n2. **Mixed-Precision Quantization:** Assigns different bit-widths (4-bit or 8-bit) to each layer based on their importance to the target task. A two-stage allocation strategy first assigns precisions based on mutual information, then refines them via Bayesian optimization to explore better configurations [2412_11629v1__c0001][2412_11629v1__c0004].\n\n3. **Efficient Fine-Tuning:** Uses LoftQ for quantized models (or LoRA for unquantized ones) to recover performance after compression, since full-parameter fine-tuning would require too much memory [2412_11629v1__c0023].\n\nAt 50% pruning rate on LLaMA-7B, QPruner reduces memory from 23.89 GB to 16.65 GB (~30% reduction) while improving accuracy over baselines [2412_11629v1__c0024].\n\n## PBS2P (Progressive Binarization with Semi-Structured Pruning)\n\nThis post-training framework combines extreme binarization (1-bit weights) with semi-structured N:M pruning (e.g., 4:8 sparsity) [2502_01705v4__c0002]:\n\n1. **Stepwise Semi-Structured Pruning with Binarization Optimization (SPBO):** Progressively introduces sparsity while jointly optimizing binarization parameters at each step, minimizing combined pruning and quantization error rather than treating them sequentially [2502_01705v4__c0002][2502_01705v4__c0015].\n\n2. **Coarse-to-Fine Search (CFS):** First allocates pruning ratios across layers, then refines element selection within each layer to avoid removing important weights that would amplify quantization errors [2502_01705v4__c0002].\n\nThis achieves average bit-widths as low as 0.55 bits (for 4:8 sparsity) while maintaining strong perplexity and downstream accuracy [2502_01705v4__c0025].\n\n## Common Theme\n\nAll three frameworks address the core challenge that naively combining compression techniques leads to compounding errors. Each uses joint or iterative optimization strategies—HOLA through integrated pipeline design, QPruner through Bayesian refinement of bit-width allocation, and PBS2P through stepwise co-optimization—to mitigate accuracy loss while maximizing memory savings.",
+      "run_id": "6d6a3e84477e"
+    },
+    {
+      "question_id": "cf03",
+      "category": "conflicting",
+      "expect_abstention": false,
+      "abstained": false,
+      "abstention_correct": true,
+      "recall": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "mrr": 0.0,
+      "gold_paper_hit": true,
+      "fact_coverage": 0.6667,
+      "facts_covered": "2/3",
+      "citations": {
+        "total": 4,
+        "resolved": 4,
+        "unresolved": []
+      },
+      "tools": {
+        "expected": [
+          "retrieve_evidence"
+        ],
+        "used": [
+          "retrieve_evidence"
+        ],
+        "missing": [],
+        "unexpected": [],
+        "matched": true
+      },
+      "iterations": 2,
+      "tool_calls": 1,
+      "stopped_because": "answered",
+      "elapsed_ms": 20075,
+      "answer": "Based on the indexed literature, routing collapse is **not presented as inevitable**. Instead, it is characterized as a **robust, recurring pattern** in Mixture-of-Experts (MoE) systems trained on imbalanced multilingual corpora, but one that is **highly correctable** through targeted adaptation.\n\nKey findings from the evidence:\n\n* **Cause, not destiny:** The collapse (specifically deep-layer routing collapse where underrepresented languages funnel into fewer experts) stems from token frequency statistics in pre-training data rather than intrinsic language properties or fixed architectural limits `[2605_17598v1__c0005][2605_17598v1__c0053]`.\n* **Correctable via fine-tuning:** Routing imbalance can be substantially mitigated by fine-tuning on data with greater representation of the target language. Both Continual Pre-Training (CPT) and Supervised Fine-Tuning (SFT) redistribute expert utilization, though CPT produces a more thorough reorganization and broader downstream gains `[2605_17598v1__c0052][2605_17598v1__c0056]`.\n* **Architecture affects correctability:** The papers note that hybrid architectures (e.g., Mamba-Transformer hybrids) demonstrate greater \"routing correctability\" and plasticity than pure Transformer designs. State-space components appear to provide additional degrees of freedom, allowing hybrid models to largely eliminate deep-layer collapse during adaptation, whereas pure Transformers may retain residual imbalance even after correction attempts `[2605_17598v1__c0052][2605_17598v1__c0053][2605_17598v1__c0056]`.\n\nIn short, while deep-layer routing collapse is a predictable consequence of data imbalance, the literature treats it as a **plastic, addressable phenomenon** rather than a fundamental limitation of MoE architectures.",
+      "run_id": "20ca166e6337"
+    },
+    {
+      "question_id": "ni03",
+      "category": "not_in_corpus",
+      "expect_abstention": true,
+      "abstained": true,
+      "abstention_correct": true,
+      "recall": {
+        "1": NaN,
+        "3": NaN,
+        "5": NaN
+      },
+      "mrr": NaN,
+      "gold_paper_hit": false,
+      "fact_coverage": NaN,
+      "facts_covered": "0/0",
+      "citations": {
+        "total": 0,
+        "resolved": 0,
+        "unresolved": []
+      },
+      "tools": {
+        "expected": [
+          "retrieve_evidence"
+        ],
+        "used": [
+          "retrieve_evidence",
+          "retrieve_evidence",
+          "analyze_corpus",
+          "retrieve_evidence"
+        ],
+        "missing": [],
+        "unexpected": [
+          "analyze_corpus"
+        ],
+        "matched": true
+      },
+      "iterations": 5,
+      "tool_calls": 4,
+      "stopped_because": "answered",
+      "elapsed_ms": 23480,
+      "answer": "I cannot answer this question from the available evidence. The indexed corpus contains 11 papers focused exclusively on **sparse mixture-of-experts routing in transformer models** and **structured pruning/quantization for efficient transformers**. It does not include any literature on federated learning, distributed training across heterogeneous devices, or the specific phenomenon of \"client drift.\"\n\nIf you would like me to search arXiv for recent papers on handling client drift under non-IID data distributions, I can do that, though it will take 30–60 seconds to fetch and index the results. Alternatively, if your question was intended in the context of Mixture-of-Experts models (e.g., expert load imbalance or routing collapse under imbalanced data), I can summarize what the indexed papers say about those related concepts instead.",
+      "run_id": "f706662a8f03"
+    }
+  ],
+  "errors": 0,
+  "recall": {
+    "1": 0.0417,
+    "3": 0.2083,
+    "5": 0.25
+  },
+  "mrr": 0.4583,
+  "gold_paper_hit_rate": 1.0,
+  "fact_coverage": 0.9167,
+  "abstention_accuracy": 1.0,
+  "abstention_on_absent": 1.0,
+  "false_abstention_on_answerable": 0.0,
+  "citations_resolved": 1.0,
+  "tool_trace_matched": 1.0,
+  "mean_iterations": 3.4,
+  "median_elapsed_ms": 20075
+}

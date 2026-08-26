@@ -1,0 +1,25 @@
+{
+  "n_questions": 10,
+  "arms": {
+    "rerank_on": {
+      "recall": {
+        "1": 0.0417,
+        "3": 0.0833,
+        "5": 0.125
+      },
+      "mrr": 0.3438,
+      "gold_paper_hit_rate": 0.875,
+      "median_latency_ms": 1548
+    },
+    "rerank_off": {
+      "recall": {
+        "1": 0.0417,
+        "3": 0.0625,
+        "5": 0.1083
+      },
+      "mrr": 0.3167,
+      "gold_paper_hit_rate": 1.0,
+      "median_latency_ms": 21
+    }
+  }
+}

@@ -1,0 +1,26 @@
+# Eval topics live here, never in src/. The system is topic-agnostic by design: a topic
+# is a runtime argument, and a topic name appearing in src/ would be a bug.
+#
+# The two topics are deliberately ADJACENT BUT DISTINCT. They share surface vocabulary —
+# sparsity, FLOPs, parameters, efficiency, transformer — while making separate claims
+# with separate methods. Trivially disjoint topics (astrophysics vs. cooking chemistry)
+# would make retrieval look good for the wrong reason: any embedding model separates
+# those, so the eval would measure nothing.
+#
+# Both are indexed into the SAME index, distinguished only by topic_tags. A mixed pool
+# is the honest test, because cross-topic distractors are present by construction.
+
+topics:
+  moe_routing:
+    query: "sparse mixture-of-experts routing in transformer models"
+    max_results: 6
+    categories: ["cs.LG", "cs.CL"]
+
+  model_compression:
+    query: "structured pruning and quantization for efficient transformer inference"
+    max_results: 6
+    categories: ["cs.LG", "cs.CL"]
+
+# A third topic, never indexed. Used to check that the agent abstains rather than
+# inventing an answer when the corpus genuinely lacks the subject.
+absent_topic_probe: "sourdough fermentation temperature and starter culture biology"
