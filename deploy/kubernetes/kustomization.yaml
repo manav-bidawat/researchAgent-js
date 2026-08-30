@@ -1,0 +1,4 @@
+resources:
+  - namespace.yaml
+  - neo4j.yaml
+  - mcp-server.yaml
