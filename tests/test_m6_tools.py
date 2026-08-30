@@ -353,11 +353,11 @@ def test_groundedness_scores_only_the_most_similar_premises(cfg):
 
 # ------------------------------------------------------------------------- registry
 
-def test_all_five_tools_are_registered(cfg):
+def test_all_six_tools_are_registered(cfg):
     seed(cfg)
     registry = build_full_registry(config=cfg)
     assert registry.names == sorted([
-        "analyze_corpus", "check_evidence_consistency", "inspect_figure",
+        "analyze_corpus", "check_evidence_consistency", "explore_graph", "inspect_figure",
         "retrieve_evidence", "search_literature",
     ])
 

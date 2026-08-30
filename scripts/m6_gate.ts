@@ -102,7 +102,7 @@ async function run(bridge: PythonBridge): Promise<number> {
 
   // ---- the agent selecting tools -----------------------------------------
   const { names } = await bridge.call<{ names: string[] }>("registered_tools");
-  gate.check("all five tools are registered", names.length === 5, names.join(", "));
+  gate.check("all six tools are registered", names.length === 6, names.join(", "));
 
   const questions: Record<string, string> = {
     analyze_corpus: "What topics does this corpus cover, and what years do the papers span?",
